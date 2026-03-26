@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Task Manager</title>
+    <style>
+        :root {
+            --bg: #0b1020;
+            --bg-2: #121a31;
+            --panel: rgba(18, 26, 49, 0.82);
+            --text: #edf2ff;
+            --muted: #97a3c2;
+            --line: rgba(151, 163, 194, 0.18);
+            --primary: #62e0a1;
+            --primary-dark: #36a977;
+            --secondary: #6b7cff;
+            --secondary-dark: #4758d8;
+            --danger: #ff7b92;
+            --overlay: rgba(3, 7, 18, 0.72);
+        }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+            color: var(--text);
+            background:
+                radial-gradient(circle at top left, rgba(107, 124, 255, 0.22), transparent 26%),
+                radial-gradient(circle at bottom right, rgba(98, 224, 161, 0.16), transparent 24%),
+                linear-gradient(160deg, var(--bg), var(--bg-2) 58%, #0f1730);
+            padding: 28px;
+        }
+        .shell {
+            width: min(1120px, 100%);
+            margin: 0 auto;
+            min-height: calc(100vh - 56px);
+            display: grid;
+            place-items: center;
+        }
+        .hero {
+            width: min(100%, 1040px);
+            padding: 56px;
+            border-radius: 30px;
+            background: linear-gradient(180deg, rgba(21, 31, 58, 0.92), rgba(14, 22, 42, 0.92));
+            border: 1px solid var(--line);
+            box-shadow: 0 28px 80px rgba(0, 0, 0, 0.34);
+            position: relative;
+            overflow: hidden;
+        }
+        .hero::before,
+        .hero::after {
+            content: "";
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(12px);
+        }
+        .hero::before {
+            width: 280px;
+            height: 280px;
+            background: rgba(107, 124, 255, 0.16);
+            top: -120px;
+            right: -90px;
+        }
+        .hero::after {
+            width: 240px;
+            height: 240px;
+            background: rgba(98, 224, 161, 0.12);
+            bottom: -110px;
+            left: -80px;
+        }
+        .eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 16px;
+            border-radius: 999px;
+            background: rgba(107, 124, 255, 0.12);
+            border: 1px solid rgba(107, 124, 255, 0.18);
+            color: #c8d1ff;
+            font-size: 0.9rem;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+        }
+        .hero h1 {
+            margin: 20px 0 18px;
+            font-size: clamp(3rem, 7vw, 5.8rem);
+            line-height: 0.95;
+            max-width: 760px;
+        }
+        .hero p {
+            margin: 0;
+            max-width: 620px;
+            color: var(--muted);
+            font-size: 1.05rem;
+            line-height: 1.8;
+        }
+        .actions {
+            display: flex;
+            gap: 14px;
+            flex-wrap: wrap;
+            margin-top: 34px;
+        }
+        .action {
+            border: none;
+            border-radius: 16px;
+            padding: 14px 22px;
+            font: inherit;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.18s ease, box-shadow 0.18s ease;
+        }
+        .action:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 16px 28px rgba(0, 0, 0, 0.24);
+        }
+        .action.primary {
+            color: #04120c;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+        }
+        .action.secondary {
+            color: white;
+            background: linear-gradient(135deg, var(--secondary), var(--secondary-dark));
+        }
+        .features {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 26px;
+        }
+        .feature {
+            padding: 10px 14px;
+            border-radius: 14px;
+            border: 1px solid var(--line);
+            background: rgba(255, 255, 255, 0.04);
+            color: #d5dcf4;
+            font-size: 0.95rem;
+        }
+        .modal {
+            position: fixed;
+            inset: 0;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            background: var(--overlay);
+            z-index: 20;
+        }
+        .modal.is-open { display: flex; }
+        .card {
+            width: min(460px, 100%);
+            padding: 28px;
+            border-radius: 28px;
+            background: linear-gradient(180deg, rgba(22, 32, 58, 0.98), rgba(15, 22, 41, 0.98));
+            border: 1px solid var(--line);
+            box-shadow: 0 28px 80px rgba(0, 0, 0, 0.36);
+        }
+        .card-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            gap: 16px;
+            margin-bottom: 18px;
+        }
+        .card h2 { margin: 0 0 8px; font-size: 1.8rem; }
+        .card p { margin: 0; color: var(--muted); line-height: 1.6; }
+        .close {
+            width: 40px;
+            height: 40px;
+            border-radius: 14px;
+            border: 1px solid var(--line);
+            background: rgba(255, 255, 255, 0.05);
+            color: white;
+            font-size: 1.2rem;
+            cursor: pointer;
+        }
+        form { display: grid; gap: 14px; margin-top: 10px; }
+        label { display: grid; gap: 8px; color: #dce4fb; font-size: 0.95rem; }
+        input {
+            width: 100%;
+            padding: 14px 16px;
+            border-radius: 16px;
+            border: 1px solid var(--line);
+            background: rgba(255, 255, 255, 0.04);
+            color: white;
+            font: inherit;
+        }
+        input:focus {
+            outline: none;
+            border-color: rgba(98, 224, 161, 0.5);
+            box-shadow: 0 0 0 3px rgba(98, 224, 161, 0.12);
+        }
+        .submit {
+            margin-top: 8px;
+            border: none;
+            border-radius: 16px;
+            padding: 14px 18px;
+            font: inherit;
+            font-weight: 700;
+            color: #04120c;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            cursor: pointer;
+        }
+        .error {
+            margin-top: 12px;
+            min-height: 1.2em;
+            color: var(--danger);
+            font-size: 0.95rem;
+        }
+        @media (max-width: 700px) {
+            body { padding: 16px; }
+            .hero { padding: 32px 24px; border-radius: 24px; }
+            .card { padding: 24px; border-radius: 24px; }
+            .hero h1 { font-size: 2.8rem; }
+        }
+    </style>
+</head>
+<body>
+    <main class="shell">
+        <section class="hero">
+            <span class="eyebrow">Task Manager</span>
+            <h1>Темное рабочее пространство для личных задач.</h1>
+            <p>Зарегистрируй аккаунт, войди в личный кабинет и управляй только своими задачами. Вход и регистрация открываются поверх страницы в отдельных окнах.</p>
+            <div class="actions">
+                <button class="action primary" type="button" data-open="login-modal">Войти</button>
+                <button class="action secondary" type="button" data-open="register-modal">Зарегистрироваться</button>
+            </div>
+            <div class="features">
+                <span class="feature">JWT-аутентификация</span>
+                <span class="feature">PostgreSQL</span>
+                <span class="feature">CRUD только для своих задач</span>
+            </div>
+        </section>
+    </main>
+
+    <section class="modal {% if login_error %}is-open{% endif %}" id="login-modal">
+        <div class="card">
+            <div class="card-top">
+                <div>
+                    <h2>Вход</h2>
+                    <p>Введи логин и пароль своего аккаунта.</p>
+                </div>
+                <button class="close" type="button" data-close>&times;</button>
+            </div>
+            <form method="post" action="/login">
+                <label>Логин<input type="text" name="username" pattern="[A-Za-z0-9]+" required></label>
+                <label>Пароль<input type="password" name="password" minlength="8" required></label>
+                <button class="submit" type="submit">Войти</button>
+            </form>
+            <p class="error">{{ login_error or "" }}</p>
+        </div>
+    </section>
+
+    <section class="modal {% if register_error %}is-open{% endif %}" id="register-modal">
+        <div class="card">
+            <div class="card-top">
+                <div>
+                    <h2>Регистрация</h2>
+                    <p>Логин только из английских букв и цифр, пароль от 8 символов.</p>
+                </div>
+                <button class="close" type="button" data-close>&times;</button>
+            </div>
+            <form method="post" action="/register">
+                <label>Логин<input type="text" name="username" pattern="[A-Za-z0-9]+" required></label>
+                <label>Пароль<input type="password" name="password" minlength="8" required></label>
+                <button class="submit" type="submit">Создать аккаунт</button>
+            </form>
+            <p class="error">{{ register_error or "" }}</p>
+        </div>
+    </section>
+
+    <script>
+        const modals = document.querySelectorAll(".modal");
+        function closeModals() { modals.forEach((modal) => modal.classList.remove("is-open")); }
+        document.querySelectorAll("[data-open]").forEach((button) => {
+            button.addEventListener("click", () => {
+                closeModals();
+                document.getElementById(button.dataset.open)?.classList.add("is-open");
+            });
+        });
+        document.querySelectorAll("[data-close]").forEach((button) => {
+            button.addEventListener("click", closeModals);
+        });
+        modals.forEach((modal) => {
+            modal.addEventListener("click", (event) => {
+                if (event.target === modal) closeModals();
+            });
+        });
+        document.addEventListener("keydown", (event) => {
+            if (event.key === "Escape") closeModals();
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Бэклог</title>
+    <style>
+        :root {
+            --bg: #090d18;
+            --bg-2: #11172b;
+            --line: rgba(149, 162, 198, 0.16);
+            --text: #eef3ff;
+            --muted: #98a4c3;
+            --primary: #62e0a1;
+            --primary-dark: #329c6f;
+            --danger: #ff7893;
+            --warning: #ffb55e;
+            --success: #6be5b4;
+            --overlay: rgba(2, 5, 14, 0.78);
+        }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+            color: var(--text);
+            background:
+                radial-gradient(circle at top left, rgba(113, 132, 255, 0.18), transparent 24%),
+                radial-gradient(circle at bottom right, rgba(98, 224, 161, 0.12), transparent 24%),
+                linear-gradient(160deg, var(--bg), var(--bg-2) 60%, #0d1428);
+            padding: 28px;
+        }
+        .wrap { width: min(1280px, 100%); margin: 0 auto; display: grid; gap: 22px; }
+        .panel {
+            padding: 26px;
+            border-radius: 30px;
+            background: linear-gradient(180deg, rgba(17, 23, 43, 0.95), rgba(12, 18, 34, 0.96));
+            border: 1px solid var(--line);
+            box-shadow: 0 26px 70px rgba(0, 0, 0, 0.34);
+        }
+        .panel-head, .toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+        .panel-head { margin-bottom: 20px; }
+        .toolbar { margin-bottom: 18px; }
+        .panel-left, .panel-title, .sort-form, .user-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .toolbar-forms {
+            display: flex;
+            align-items: end;
+            gap: 14px;
+            flex-wrap: wrap;
+        }
+        .search-form {
+            display: flex;
+            align-items: end;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .search-panel {
+            display: none;
+            margin-bottom: 16px;
+        }
+        .search-panel.is-open {
+            display: block;
+        }
+        .search-toggle {
+            border: 1px solid var(--line);
+            background: rgba(255, 255, 255, 0.03);
+            color: #dce4fb;
+        }
+        .search-form input {
+            min-width: 260px;
+        }
+        .pagination {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 18px;
+        }
+        .page-link, .page-current {
+            min-width: 42px;
+            padding: 10px 14px;
+            border-radius: 14px;
+            border: 1px solid var(--line);
+            text-decoration: none;
+            text-align: center;
+            font-weight: 600;
+        }
+        .page-link {
+            color: #dce4fb;
+            background: rgba(255, 255, 255, 0.03);
+        }
+        .page-current {
+            color: #04120c;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            border: none;
+        }
+        .total-note {
+            margin: 0;
+            color: var(--muted);
+        }
+        .panel-title h2, .backlog-list h3 { margin: 0; }
+        .panel-title h2 { font-size: 2rem; }
+        .nav-button, .ghost, button {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            border-radius: 16px;
+            padding: 12px 16px;
+            font: inherit;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            transition: transform 0.18s ease, box-shadow 0.18s ease;
+        }
+        .nav-button, .ghost {
+            border: 1px solid var(--line);
+            color: #dce4fb;
+            background: rgba(255, 255, 255, 0.03);
+        }
+        button {
+            border: none;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: #04120c;
+        }
+        .nav-button:hover, .ghost:hover, button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 14px 24px rgba(0, 0, 0, 0.24);
+        }
+        .user-actions {
+            padding: 8px 10px 8px 16px;
+            border: 1px solid var(--line);
+            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.03);
+        }
+        .user-actions p { margin: 0; color: #d9e3ff; }
+        label { display: grid; gap: 8px; color: #dce4fb; font-size: 0.95rem; }
+        input, textarea, select {
+            width: 100%;
+            padding: 14px 16px;
+            border-radius: 16px;
+            border: 1px solid var(--line);
+            background: rgba(255, 255, 255, 0.04);
+            color: white;
+            font: inherit;
+        }
+        textarea { min-height: 120px; resize: vertical; }
+        .backlog-list {
+            display: grid;
+            gap: 14px;
+        }
+        .backlog-card {
+            display: grid;
+            grid-template-columns: minmax(220px, 1.2fr) minmax(260px, 1fr) minmax(220px, 0.8fr);
+            gap: 18px;
+            align-items: center;
+            width: 100%;
+            padding: 20px 22px;
+            border-radius: 12px;
+            border: 1px solid var(--line);
+            background: linear-gradient(180deg, rgba(21, 29, 54, 0.96), rgba(15, 22, 41, 0.96));
+            cursor: pointer;
+            transition: transform 0.18s ease, box-shadow 0.18s ease;
+        }
+        .backlog-card:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 18px 32px rgba(0, 0, 0, 0.28);
+        }
+        .title-block, .detail-block, .date-block {
+            display: grid;
+            gap: 10px;
+        }
+        .status-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .badge, .priority-badge {
+            width: fit-content;
+            padding: 8px 12px;
+            border-radius: 14px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+        .backlog-card[data-status="в ожидании"] .badge,
+        .modal-card[data-status="в ожидании"] .badge { background: rgba(255, 181, 94, 0.12); color: var(--warning); }
+        .backlog-card[data-status="в работе"] .badge,
+        .modal-card[data-status="в работе"] .badge { background: rgba(113, 132, 255, 0.14); color: #aeb8ff; }
+        .backlog-card[data-status="завершено"] .badge,
+        .modal-card[data-status="завершено"] .badge { background: rgba(107, 229, 180, 0.14); color: var(--success); }
+        .priority-badge[data-priority="не важно"] { background: rgba(149, 162, 198, 0.14); color: #cdd7f6; }
+        .priority-badge[data-priority="важно"] { background: rgba(113, 132, 255, 0.14); color: #b8c2ff; }
+        .priority-badge[data-priority="критично"] { background: rgba(255, 120, 147, 0.14); color: #ff9bad; }
+        .backlog-card h3 { font-size: 1.15rem; line-height: 1.2; }
+        .meta, .summary { margin: 0; color: var(--muted); line-height: 1.5; }
+        .summary {
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        .deadline-box {
+            display: grid;
+            gap: 8px;
+        }
+        .deadline-line {
+            width: 100%;
+            height: 8px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.08);
+            overflow: hidden;
+        }
+        .deadline-fill {
+            height: 100%;
+            width: 0;
+            border-radius: 999px;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+        }
+        .deadline-label { font-size: 0.84rem; color: #d8e4ff; }
+        .empty {
+            padding: 22px;
+            border-radius: 18px;
+            border: 1px dashed var(--line);
+            background: rgba(255, 255, 255, 0.03);
+            color: var(--muted);
+            text-align: center;
+        }
+        .view-note {
+            margin: 0 0 12px;
+            color: #dce4fb;
+        }
+        .error { min-height: 1.2em; margin-bottom: 14px; color: var(--danger); }
+        .modal {
+            position: fixed;
+            inset: 0;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            background: var(--overlay);
+            z-index: 20;
+        }
+        .modal.is-open { display: flex; }
+        .modal-card {
+            width: min(760px, 100%);
+            max-height: calc(100vh - 48px);
+            overflow: auto;
+            padding: 28px;
+            border-radius: 28px;
+            background: linear-gradient(180deg, rgba(19, 27, 50, 0.98), rgba(12, 18, 35, 0.98));
+            border: 1px solid var(--line);
+            box-shadow: 0 28px 80px rgba(0, 0, 0, 0.4);
+        }
+        .modal-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            gap: 16px;
+            margin-bottom: 18px;
+        }
+        .modal-top h3 { margin: 10px 0 8px; font-size: 1.9rem; }
+        .close {
+            width: 42px;
+            height: 42px;
+            border-radius: 16px;
+            border: 1px solid var(--line);
+            background: rgba(255, 255, 255, 0.04);
+            color: white;
+            font-size: 1.2rem;
+            cursor: pointer;
+        }
+        form { display: grid; gap: 14px; }
+        @media (max-width: 980px) {
+            .backlog-card { grid-template-columns: 1fr; }
+        }
+        @media (max-width: 700px) {
+            body { padding: 16px; }
+            .panel, .modal-card { padding: 20px; border-radius: 24px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="wrap">
+        <article class="panel">
+            <div class="panel-head">
+                <div class="panel-left">
+                    <a class="nav-button" href="/me">Канбан</a>
+                    <div class="panel-title"><h2>Бэклог</h2></div>
+                </div>
+                <div class="user-actions">
+                    <p><strong>{{ user.username }}</strong></p>
+                    <form method="post" action="/logout"><button class="ghost" type="submit">Выйти</button></form>
+                </div>
+            </div>
+            <div class="toolbar">
+                <div class="toolbar-forms">
+                    <button class="search-toggle" type="button" data-search-toggle>
+                        {% if search_query %}Скрыть поиск{% else %}Показать поиск{% endif %}
+                    </button>
+                    <form class="sort-form" method="get" action="/backlog">
+                        <input type="hidden" name="backlog_view" value="{{ backlog_view }}">
+                        <input type="hidden" name="search_query" value="{{ search_query }}">
+                        <input type="hidden" name="search_in" value="{{ search_in }}">
+                        <input type="hidden" name="per_page" value="{{ per_page }}">
+                        <label>
+                            Сортировка
+                            <select name="sort_by" onchange="this.form.submit()">
+                                {% for key, label in sort_options.items() %}
+                                <option value="{{ key }}" {% if sort_by == key %}selected{% endif %}>{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                        </label>
+                    </form>
+                    <form class="sort-form" method="get" action="/backlog">
+                        <input type="hidden" name="sort_by" value="{{ sort_by }}">
+                        <input type="hidden" name="search_query" value="{{ search_query }}">
+                        <input type="hidden" name="search_in" value="{{ search_in }}">
+                        <input type="hidden" name="per_page" value="{{ per_page }}">
+                        <label>
+                            Вид
+                            <select name="backlog_view" onchange="this.form.submit()">
+                                {% for key, label in backlog_view_options.items() %}
+                                <option value="{{ key }}" {% if backlog_view == key %}selected{% endif %}>{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                        </label>
+                    </form>
+                    <form class="sort-form" method="get" action="/backlog">
+                        <input type="hidden" name="sort_by" value="{{ sort_by }}">
+                        <input type="hidden" name="backlog_view" value="{{ backlog_view }}">
+                        <input type="hidden" name="search_query" value="{{ search_query }}">
+                        <input type="hidden" name="search_in" value="{{ search_in }}">
+                        <label>
+                            По N
+                            <select name="per_page" onchange="this.form.submit()">
+                                {% for option in per_page_options %}
+                                <option value="{{ option }}" {% if per_page == option %}selected{% endif %}>{{ option }}</option>
+                                {% endfor %}
+                            </select>
+                        </label>
+                    </form>
+                </div>
+                <p class="total-note">Всего задач: {{ total_tasks }}</p>
+            </div>
+            <div class="search-panel {% if search_query %}is-open{% endif %}" data-search-panel>
+                <form class="search-form" method="get" action="/backlog">
+                    <input type="hidden" name="sort_by" value="{{ sort_by }}">
+                    <input type="hidden" name="backlog_view" value="{{ backlog_view }}">
+                    <input type="hidden" name="per_page" value="{{ per_page }}">
+                    <label>
+                        Поиск
+                        <input type="text" name="search_query" value="{{ search_query }}" placeholder="Подстрока в названии или описании">
+                    </label>
+                    <label>
+                        Где искать
+                        <select name="search_in">
+                            {% for key, label in search_in_options.items() %}
+                            <option value="{{ key }}" {% if search_in == key %}selected{% endif %}>{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </label>
+                    <button type="submit">Найти</button>
+                    {% if search_query %}
+                    <a class="nav-button" href="/backlog?sort_by={{ sort_by }}&backlog_view={{ backlog_view }}&per_page={{ per_page }}">Сбросить</a>
+                    {% endif %}
+                </form>
+            </div>
+            {% if backlog_view == "important" %}
+            <p class="view-note">Показаны задачи по приоритету и ближайшему дедлайну.</p>
+            {% endif %}
+            <p class="error">{{ error or "" }}</p>
+            <div class="backlog-list">
+                {% if tasks %}
+                    {% for task in tasks %}
+                    <section class="backlog-card" data-open="task-modal-{{ task.id }}" data-status="{{ task.status.value }}" data-priority="{{ task.priority.value }}" data-created-at="{{ task.created_at.isoformat() }}" data-deadline="{{ task.deadline.isoformat() if task.deadline else '' }}" tabindex="0" role="button" aria-label="Открыть задачу {{ task.title }}">
+                        <div class="title-block">
+                            <div class="status-row">
+                                <span class="badge">{{ task.status.value }}</span>
+                                <span class="priority-badge" data-priority="{{ task.priority.value }}">{{ task.priority.value }}</span>
+                            </div>
+                            <h3>{{ task.title }}</h3>
+                        </div>
+                        <div class="detail-block">
+                            <p class="summary">{{ task.description or "Без описания" }}</p>
+                            <div class="deadline-box">
+                                <div class="deadline-line"><div class="deadline-fill" data-progress-fill></div></div>
+                                <p class="deadline-label" data-progress-label>{% if task.deadline %}Дедлайн: {{ task.deadline.strftime("%d.%m.%Y") }}{% else %}Дедлайн не задан{% endif %}</p>
+                            </div>
+                        </div>
+                        <div class="date-block">
+                            <p class="meta">Создано: {{ task.created_at.strftime("%d.%m.%Y %H:%M") }}</p>
+                            <p class="meta">{% if task.deadline %}До: {{ task.deadline.strftime("%d.%m.%Y") }}{% else %}Без дедлайна{% endif %}</p>
+                        </div>
+                    </section>
+                    {% endfor %}
+                {% else %}
+                    <div class="empty">В бэклоге пока нет задач.</div>
+                {% endif %}
+            </div>
+            {% if total_pages > 1 %}
+            <div class="pagination">
+                {% if page > 1 %}
+                <a class="page-link" href="/backlog?sort_by={{ sort_by }}&backlog_view={{ backlog_view }}&search_query={{ search_query }}&search_in={{ search_in }}&per_page={{ per_page }}&page={{ page - 1 }}">Назад</a>
+                {% endif %}
+                {% for page_number in range(1, total_pages + 1) %}
+                    {% if page_number == page %}
+                    <span class="page-current">{{ page_number }}</span>
+                    {% else %}
+                    <a class="page-link" href="/backlog?sort_by={{ sort_by }}&backlog_view={{ backlog_view }}&search_query={{ search_query }}&search_in={{ search_in }}&per_page={{ per_page }}&page={{ page_number }}">{{ page_number }}</a>
+                    {% endif %}
+                {% endfor %}
+                {% if page < total_pages %}
+                <a class="page-link" href="/backlog?sort_by={{ sort_by }}&backlog_view={{ backlog_view }}&search_query={{ search_query }}&search_in={{ search_in }}&per_page={{ per_page }}&page={{ page + 1 }}">Далее</a>
+                {% endif %}
+            </div>
+            {% endif %}
+        </article>
+    </div>
+
+    {% for task in tasks %}
+    <section class="modal" id="task-modal-{{ task.id }}">
+        <div class="modal-card" data-status="{{ task.status.value }}">
+            <div class="modal-top">
+                <div>
+                    <h3>{{ task.title }}</h3>
+                    <div class="status-row">
+                        <span class="badge">{{ task.status.value }}</span>
+                        <span class="priority-badge" data-priority="{{ task.priority.value }}">{{ task.priority.value }}</span>
+                    </div>
+                    <p class="meta">Создано: {{ task.created_at.strftime("%d.%m.%Y %H:%M") }}</p>
+                </div>
+                <button class="close" type="button" data-close>&times;</button>
+            </div>
+            <form method="post" action="/me/tasks/{{ task.id }}/update">
+                <label>Заголовок<input type="text" name="title" maxlength="200" value="{{ task.title }}" required></label>
+                <label>Описание<textarea name="description" maxlength="5000">{{ task.description }}</textarea></label>
+                <label>Статус<select name="status_value">{% for status in statuses %}<option value="{{ status.value }}" {% if status == task.status %}selected{% endif %}>{{ status.value }}</option>{% endfor %}</select></label>
+                <label>Приоритет<select name="priority_value">{% for priority in priorities %}<option value="{{ priority.value }}" {% if priority == task.priority %}selected{% endif %}>{{ priority.value }}</option>{% endfor %}</select></label>
+                <label>Дедлайн<input type="date" name="deadline" value="{{ task.deadline.isoformat() if task.deadline else '' }}"></label>
+                <button type="submit" class="ghost">Сохранить изменения</button>
+            </form>
+            <form method="post" action="/me/tasks/{{ task.id }}/delete"><button type="submit">Удалить</button></form>
+        </div>
+    </section>
+    {% endfor %}
+
+    <script>
+        const modals = document.querySelectorAll(".modal");
+        const backlogCards = document.querySelectorAll(".backlog-card");
+        const searchToggle = document.querySelector("[data-search-toggle]");
+        const searchPanel = document.querySelector("[data-search-panel]");
+
+        function closeModals() { modals.forEach((modal) => modal.classList.remove("is-open")); }
+        function syncSearchToggle() {
+            if (!searchToggle || !searchPanel) return;
+            searchToggle.textContent = searchPanel.classList.contains("is-open") ? "Скрыть поиск" : "Показать поиск";
+        }
+
+        function clampProgress(value) {
+            return Math.max(0, Math.min(100, value));
+        }
+
+        function setupDeadlineProgress() {
+            backlogCards.forEach((card) => {
+                const fill = card.querySelector("[data-progress-fill]");
+                const label = card.querySelector("[data-progress-label]");
+                const deadlineValue = card.dataset.deadline;
+                if (!fill || !label || !deadlineValue) return;
+
+                const createdAt = new Date(card.dataset.createdAt);
+                const deadline = new Date(`${deadlineValue}T23:59:59`);
+                const now = new Date();
+                const total = deadline.getTime() - createdAt.getTime();
+                let percent = 100;
+
+                if (total > 0) {
+                    percent = clampProgress(((now.getTime() - createdAt.getTime()) / total) * 100);
+                }
+                if (card.dataset.status === "завершено") {
+                    percent = 100;
+                }
+
+                fill.style.width = `${percent}%`;
+                label.textContent = `Дедлайн: ${new Date(deadlineValue).toLocaleDateString("ru-RU")} • ${Math.round(percent)}% срока`;
+            });
+        }
+
+        backlogCards.forEach((card) => {
+            card.addEventListener("click", () => {
+                closeModals();
+                document.getElementById(card.dataset.open)?.classList.add("is-open");
+            });
+            card.addEventListener("keydown", (event) => {
+                if (event.key === "Enter" || event.key === " ") {
+                    event.preventDefault();
+                    closeModals();
+                    document.getElementById(card.dataset.open)?.classList.add("is-open");
+                }
+            });
+        });
+
+        document.querySelectorAll("[data-close]").forEach((button) => {
+            button.addEventListener("click", closeModals);
+        });
+        if (searchToggle && searchPanel) {
+            searchToggle.addEventListener("click", () => {
+                searchPanel.classList.toggle("is-open");
+                syncSearchToggle();
+            });
+            syncSearchToggle();
+        }
+        modals.forEach((modal) => {
+            modal.addEventListener("click", (event) => {
+                if (event.target === modal) closeModals();
+            });
+        });
+        document.addEventListener("keydown", (event) => {
+            if (event.key === "Escape") closeModals();
+        });
+
+        setupDeadlineProgress();
+    </script>
+</body>
+</html>
