@@ -17,7 +17,6 @@ ENV/
 .mypy_cache/
 .ruff_cache/
 .coverage
-htmlcov/
 
 # IDEs
 .idea/
@@ -26,3 +25,18 @@ htmlcov/
 # OS files
 .DS_Store
 Thumbs.db
+# Local databases
+*.db
+*.sqlite
+*.sqlite3
+
+# Coverage export files
+coverage.xml
+
+# Test and app logs
+*.log
+
+# Locust generated CSV statistics
+reports/load/*_stats.csv
+reports/load/*_failures.csv
+reports/load/*_exceptions.csv

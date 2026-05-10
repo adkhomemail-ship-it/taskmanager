@@ -1,0 +1,14 @@
+[run]
+source = app
+branch = True
+omit =
+    app/__init__.py
+    app/routers/__init__.py
+
+[report]
+show_missing = True
+skip_covered = False
+fail_under = 90
+exclude_lines =
+    pragma: no cover
+    if __name__ == .__main__.:
